@@ -1,11 +1,11 @@
 import { StyleSheet, Pressable, View, ScrollView, Text } from 'react-native';
-import { useEffect, useState, useCallback } from 'react';
+import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import { useState, useCallback } from 'react';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { colors } from '@/constants/colors';
 import {
   getUserProgress,
-  initializeDefaultProgress,
   getWeekCompletionStatus,
   getActiveWorkout,
   getWorkoutHistory,
@@ -31,9 +31,6 @@ export default function HomeScreen() {
   const [activeWorkoutDay, setActiveWorkoutDay] = useState<DayOfWeek | null>(null);
   const [totalReps, setTotalReps] = useState(0);
 
-  useEffect(() => {
-    initializeDefaultProgress();
-  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -112,7 +109,19 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <View style={styles.wrapper}>
+      {/* Settings Button */}
+      <Pressable
+        onPress={() => router.push('/settings')}
+        style={({ pressed }) => [
+          styles.settingsButton,
+          pressed && styles.buttonPressed,
+        ]}
+      >
+        <MaterialIcons name="settings" size={24} color={colors.textMuted} />
+      </Pressable>
+
+      <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
       {/* Hero Card with Week Progress */}
       <View style={styles.heroCard}>
         <View style={styles.heroHeader}>
@@ -222,10 +231,29 @@ export default function HomeScreen() {
         </Pressable>
       )}
     </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  wrapper: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  settingsButton: {
+    position: 'absolute',
+    top: 60,
+    right: 24,
+    zIndex: 10,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.cardBg,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.cardBorder,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.background,
