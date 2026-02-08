@@ -5,7 +5,7 @@ export default function InstructionsPage() {
   const navigate = useNavigate();
 
   const instructions = [
-    "Get into push-up position",
+    "Get into push-up positiontest",
     "Do as many push-ups as you can with proper form",
     "Stop when you can't complete another rep",
   ];
@@ -24,24 +24,16 @@ export default function InstructionsPage() {
           <MdFitnessCenter size={48} className="text-accent" />
         </div>
 
-        <h1 className="text-text-primary text-[32px] font-semibold">
-          Initial Test
-        </h1>
-        <p className="text-text-muted text-base text-center">
-          Let's find the right program for you
-        </p>
+        <h1 className="text-text-primary text-[32px] font-semibold">Initial Test</h1>
+        <p className="text-text-muted text-base text-center">Let's find the right program for you</p>
 
         <div className="flex flex-col gap-4 px-2 mt-4">
           {instructions.map((text, index) => (
             <div key={index} className="flex flex-row items-center gap-4">
               <div className="w-8 h-8 rounded-full bg-card-bg border border-card-border flex items-center justify-center shrink-0">
-                <span className="text-accent text-sm font-semibold">
-                  {index + 1}
-                </span>
+                <span className="text-accent text-sm font-semibold">{index + 1}</span>
               </div>
-              <span className="text-text-secondary text-base flex-1">
-                {text}
-              </span>
+              <span className="text-text-secondary text-base flex-1">{text}</span>
             </div>
           ))}
         </div>
