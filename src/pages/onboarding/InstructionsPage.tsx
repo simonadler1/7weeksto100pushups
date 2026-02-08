@@ -5,7 +5,7 @@ export default function InstructionsPage() {
   const navigate = useNavigate();
 
   const instructions = [
-    "Get into push-up positiontesttest",
+    "Get into push-up position",
     "Do as many push-ups as you can with proper form",
     "Stop when you can't complete another rep",
   ];
