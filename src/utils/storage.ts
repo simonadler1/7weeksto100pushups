@@ -28,6 +28,8 @@ export interface CompletedWorkout {
   sets: CompletedSet[];
   totalReps: number;
   duration: number;
+  // false when the user reported they couldn't finish; absent on legacy records means successful
+  successful?: boolean;
 }
 
 export interface WorkoutHistory {
@@ -130,7 +132,53 @@ export function getCompletedWorkout(
 }
 
 export function isWorkoutCompleted(week: number, day: 'monday' | 'wednesday' | 'friday'): boolean {
-  return getCompletedWorkout(week, day) !== null;
+  const workout = getCompletedWorkout(week, day);
+  return workout !== null && workout.successful !== false;
+}
+
+export function removeCompletedWorkout(
+  week: number,
+  day: 'monday' | 'wednesday' | 'friday'
+): void {
+  try {
+    const history = getWorkoutHistory();
+    const filteredWorkouts = history.workouts.filter(
+      w => !(w.week === week && w.day === day)
+    );
+    localStorage.setItem(STORAGE_KEYS.WORKOUT_HISTORY, JSON.stringify({ workouts: filteredWorkouts }));
+  } catch (error) {
+    console.error('Error removing completed workout:', error);
+  }
+}
+
+// Get the workout that comes right before (week, day) in the schedule
+export function getPreviousWorkout(
+  week: number,
+  day: 'monday' | 'wednesday' | 'friday'
+): { week: number; day: 'monday' | 'wednesday' | 'friday' } | null {
+  if (day === 'friday') return { week, day: 'wednesday' };
+  if (day === 'wednesday') return { week, day: 'monday' };
+  if (week > 1) return { week: week - 1, day: 'friday' };
+  return null;
+}
+
+// After a failed workout, move the schedule back one workout: the previous
+// workout becomes uncompleted again so the user rebuilds up to the failed one.
+export function regressScheduleAfterFailure(
+  week: number,
+  day: 'monday' | 'wednesday' | 'friday'
+): void {
+  const previous = getPreviousWorkout(week, day);
+  if (!previous) return; // week 1 monday: nothing to go back to, just retry it
+
+  removeCompletedWorkout(previous.week, previous.day);
+
+  if (previous.week < week) {
+    const progress = getUserProgress();
+    if (progress && progress.currentWeek === week) {
+      saveUserProgress({ ...progress, currentWeek: previous.week });
+    }
+  }
 }
 
 export function getWeekCompletionStatus(week: number): {

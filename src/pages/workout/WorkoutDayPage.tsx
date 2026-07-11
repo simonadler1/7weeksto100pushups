@@ -4,6 +4,7 @@ import WorkoutSetCard, { type SetStatus } from '@/components/workout/WorkoutSetC
 import WorkoutProgress from '@/components/workout/WorkoutProgress';
 import RestTimer from '@/components/workout/RestTimer';
 import RepInputModal from '@/components/workout/RepInputModal';
+import WorkoutCompleteModal from '@/components/workout/WorkoutCompleteModal';
 import {
   ActiveWorkout,
   CompletedSet,
@@ -12,6 +13,7 @@ import {
   clearActiveWorkout,
   addCompletedWorkout,
   getActiveWorkout,
+  regressScheduleAfterFailure,
 } from '@/utils/storage';
 import {
   loadWorkoutForDay,
@@ -36,6 +38,7 @@ export default function WorkoutDayPage() {
   const [workout, setWorkout] = useState<ActiveWorkout | null>(null);
   const [showRestTimer, setShowRestTimer] = useState(false);
   const [showRepInput, setShowRepInput] = useState(false);
+  const [showCompletePrompt, setShowCompletePrompt] = useState(false);
   const [pendingSetReps, setPendingSetReps] = useState<number | null>(null);
 
   useEffect(() => {
@@ -110,13 +113,13 @@ export default function WorkoutDayPage() {
     saveActiveWorkout(updatedWorkout);
 
     if (updatedWorkout.currentSetIndex >= updatedWorkout.sets.length) {
-      setTimeout(() => finishWorkout(updatedWorkout), 500);
+      setTimeout(() => setShowCompletePrompt(true), 500);
     } else {
       setShowRestTimer(true);
     }
   };
 
-  const finishWorkout = (completedWorkout: ActiveWorkout) => {
+  const finishWorkout = (completedWorkout: ActiveWorkout, successful: boolean) => {
     navigator.vibrate?.(200);
 
     const duration = Math.floor((Date.now() - completedWorkout.startedAt) / 1000);
@@ -131,12 +134,29 @@ export default function WorkoutDayPage() {
       sets: completedWorkout.completedSets,
       totalReps,
       duration,
+      successful,
     };
 
     addCompletedWorkout(workoutRecord);
     clearActiveWorkout();
 
+    if (!successful) {
+      regressScheduleAfterFailure(completedWorkout.week, completedWorkout.day);
+    }
+
     navigate('/', { replace: true });
+  };
+
+  const handleWorkoutCompleted = () => {
+    if (!workout) return;
+    setShowCompletePrompt(false);
+    finishWorkout(workout, true);
+  };
+
+  const handleWorkoutIncomplete = () => {
+    if (!workout) return;
+    setShowCompletePrompt(false);
+    finishWorkout(workout, false);
   };
 
   const handleRestComplete = () => {
@@ -236,6 +256,12 @@ export default function WorkoutDayPage() {
         minReps={pendingSetReps || 0}
         onSubmit={handleRepInputSubmit}
         onCancel={handleRepInputCancel}
+      />
+
+      <WorkoutCompleteModal
+        visible={showCompletePrompt}
+        onCompleted={handleWorkoutCompleted}
+        onIncomplete={handleWorkoutIncomplete}
       />
     </div>
   );
